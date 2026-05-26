@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "@/hooks/useSocket";
 import { Bell, CheckCircle, Info, Rocket, X, AlertCircle } from "lucide-react";
@@ -83,38 +83,57 @@ interface ActiveToast {
   href?: string;
 }
 
+const AUTO_HIDE_MS = 5000;
+
 export const NotificationToast: React.FC = () => {
   const { lastNotification } = useSocket();
   const [visible, setVisible] = useState(false);
   const [current, setCurrent] = useState<ActiveToast | null>(null);
 
-  // ── Show a toast (merges socket + custom-event path) ──────────────────
-  const show = useCallback((toast: ActiveToast) => {
-    setCurrent(toast);
-    setVisible(true);
-    const timer = setTimeout(() => setVisible(false), 5000);
-    return () => clearTimeout(timer);
+  // Single timer ref — cleared before each new toast so rapid-fire
+  // notifications never leave a stale hide-timer running.
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
+    };
   }, []);
 
-  // ── 1. Socket-pushed notifications ────────────────────────────────────
+  // ── 1. Socket-pushed notifications ──────────────────────────────────────
   useEffect(() => {
     if (!lastNotification) return;
-    return show({
+
+    if (timerRef.current !== null) clearTimeout(timerRef.current);
+
+    setCurrent({
       type:    lastNotification.type,
       title:   getSocketTitle(lastNotification.type),
       message: getSocketMessage(lastNotification),
     });
-  }, [lastNotification, show]);
+    setVisible(true);
 
-  // ── 2. Custom DOM events (from hooks like useVoting) ──────────────────
+    timerRef.current = setTimeout(() => setVisible(false), AUTO_HIDE_MS);
+  }, [lastNotification]);
+
+  // ── 2. Custom DOM events (from hooks like useVoting) ─────────────────────
   useEffect(() => {
     function handleCustom(e: Event) {
-      const { type, title, message, href } = (e as CustomEvent<ToastEventDetail>).detail;
-      show({ type, title, message, href });
+      const { type, title, message, href } =
+        (e as CustomEvent<ToastEventDetail>).detail;
+
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
+
+      setCurrent({ type, title, message, href });
+      setVisible(true);
+
+      timerRef.current = setTimeout(() => setVisible(false), AUTO_HIDE_MS);
     }
+
     window.addEventListener("stellar:toast", handleCustom);
     return () => window.removeEventListener("stellar:toast", handleCustom);
-  }, [show]);
+  }, []); // stable: timerRef never changes, setCurrent/setVisible are stable
 
   if (!current) return null;
 
