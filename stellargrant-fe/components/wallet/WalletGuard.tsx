@@ -1,9 +1,15 @@
 /**
  * WalletGuard Component
- * 
+ *
  * Wrapper component that renders children only when a wallet is connected.
  * Shows a connect prompt otherwise.
  */
+
+"use client";
+
+import React from "react";
+import { useWallet } from "@/hooks/useWallet";
+import { WalletConnect } from "./WalletConnect";
 
 interface WalletGuardProps {
   children: React.ReactNode;
@@ -11,14 +17,13 @@ interface WalletGuardProps {
 }
 
 export function WalletGuard({ children, requiredRole: _requiredRole = "any" }: WalletGuardProps) {
-  // TODO: Implement wallet guard with role checking
-  const isConnected = false; // This will be connected to useWallet hook
+  const { isConnected } = useWallet();
 
   if (!isConnected) {
     return (
-      <div className="text-center p-8">
-        <p className="text-muted-foreground mb-4">Please connect your wallet to continue</p>
-        {/* WalletConnect component will be rendered here */}
+      <div className="wallet-guard-prompt">
+        <p className="wallet-guard-message">Please connect your wallet to continue</p>
+        <WalletConnect />
       </div>
     );
   }
