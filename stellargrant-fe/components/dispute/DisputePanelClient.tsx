@@ -21,6 +21,57 @@ interface DisputeItem {
   priorVotes: { approved: number; rejected: number };
 }
 
+interface RawDisputeResponse {
+  grantId: string | number;
+  grantTitle?: string;
+  milestoneIdx: number;
+  milestoneTitle?: string;
+  proofHash?: string;
+  contributorArgument?: string | null;
+  funderArgument?: string | null;
+  fundedAmount?: string | number;
+  token?: string;
+  priorVotes?: { approved: number; rejected: number };
+}
+
+interface RawGrantResponse {
+  id: string | number;
+  status: string | number;
+  title: string;
+  token?: string;
+}
+
+interface RawMilestoneResponse {
+  idx: number;
+  title?: string;
+  proof_hash?: string;
+  amount?: string | number;
+  token?: string;
+  approvals?: number;
+  rejections?: number;
+  state?: string;
+  approved?: boolean;
+  submitted?: boolean;
+}
+
+interface RawMetaResponse {
+  contributorArgument?: string | null;
+  funderArgument?: string | null;
+  priorVotes?: { approved: number; rejected: number };
+}
+
+interface RawHistoryResponse {
+  id?: string;
+  grantId: string | number;
+  grantTitle?: string;
+  milestoneIdx: number;
+  milestoneTitle?: string;
+  resolution?: string;
+  resolvedAt?: string;
+  fundedAmount?: string | number;
+  token?: string;
+}
+
 export default function DisputePanelClient() {
   const { address } = useWalletStore();
   const [isCouncil, setIsCouncil] = useState<boolean | null>(null);
@@ -67,7 +118,7 @@ export default function DisputePanelClient() {
         // Fetch Open Disputes
         let openDisputes: DisputeItem[] = [];
         try {
-          const rawOpen = await apiGet<any[]>("/disputes?status=open");
+          const rawOpen = await apiGet<RawDisputeResponse[]>("/disputes?status=open");
           if (Array.isArray(rawOpen)) {
             openDisputes = rawOpen.map((item) => ({
               grantId: String(item.grantId),
@@ -85,7 +136,7 @@ export default function DisputePanelClient() {
         } catch (err) {
           console.warn("Direct disputes endpoint failed, attempting fallback query...", err);
           // Fallback: Fetch all grants and filter by disputed status/milestones
-          const allGrants = await apiGet<any[]>("/grants");
+          const allGrants = await apiGet<RawGrantResponse[]>("/grants");
           if (Array.isArray(allGrants)) {
             const disputedGrants = allGrants.filter(
               (g) => g.status === "Disputed" || Number(g.status) === 5
@@ -93,7 +144,7 @@ export default function DisputePanelClient() {
             
             for (const g of disputedGrants) {
               try {
-                const milestones = await apiGet<any[]>(`/grants/${g.id}/milestones`);
+                const milestones = await apiGet<RawMilestoneResponse[]>(`/grants/${g.id}/milestones`);
                 if (Array.isArray(milestones)) {
                   const disputedMilestones = milestones.filter(
                     (m) => m.state === "Disputed" || m.approved === false && m.submitted === true // Or status state check
@@ -124,7 +175,7 @@ export default function DisputePanelClient() {
         for (const dispute of openDisputes) {
           if (!dispute.contributorArgument || !dispute.funderArgument) {
             try {
-              const meta = await apiGet<any>(
+              const meta = await apiGet<RawMetaResponse>(
                 `/grants/${dispute.grantId}/milestones/${dispute.milestoneIdx}/dispute`
               );
               if (meta) {
@@ -146,7 +197,7 @@ export default function DisputePanelClient() {
         // Fetch Resolved Disputes
         let resolvedDisputes: ResolvedDispute[] = [];
         try {
-          const rawHistory = await apiGet<any[]>("/disputes?status=resolved");
+          const rawHistory = await apiGet<RawHistoryResponse[]>("/disputes?status=resolved");
           if (Array.isArray(rawHistory)) {
             resolvedDisputes = rawHistory.map((item) => ({
               id: item.id || `${item.grantId}-${item.milestoneIdx}`,
@@ -167,9 +218,9 @@ export default function DisputePanelClient() {
           setDisputes(openDisputes);
           setHistory(resolvedDisputes);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!cancelled) {
-          setErrorMsg(err?.message || "Failed to load dispute panel data.");
+          setErrorMsg((err as Error)?.message || "Failed to load dispute panel data.");
         }
       } finally {
         if (!cancelled) {
