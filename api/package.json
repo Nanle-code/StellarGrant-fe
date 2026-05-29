@@ -7,10 +7,13 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "test:e2e": "vitest run tests/e2e",
+    "test:integration": "vitest run tests/integration",
+    "test:coverage": "vitest run --coverage",
     "typeorm:sync": "tsx src/scripts/sync-db.ts",
     "migration:run": "tsx src/scripts/run-migrations.ts"
   },
   "dependencies": {
+    "axios": "^1.16.1",
     "@stellar/stellar-sdk": "^13.3.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
