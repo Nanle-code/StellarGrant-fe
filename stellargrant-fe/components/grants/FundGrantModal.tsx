@@ -101,9 +101,7 @@ export function FundGrantModal({ grant, open, onClose, onSuccess }: FundGrantMod
   useEffect(() => {
     if (!open) {
       queueMicrotask(() => {
-        setAmountInput("");
-        setValidationError(null);
-        setSuccessTx(null);
+        resetForm();
         resetFund();
       });
     }
