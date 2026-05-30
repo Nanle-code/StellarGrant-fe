@@ -11,6 +11,8 @@ import { logger } from "./config/logger";
 import { RateLimitAlertService } from "./services/rate-limit-alert-service";
 
 const bootstrap = async () => {
+  validateEnvOnStartup();
+  
   const dataSource = buildDataSource();
   await dataSource.initialize();
 
