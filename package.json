@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "migration:run": "cd api && npm run migration:run"
+  },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",
     "typeorm": "^0.3.28"

@@ -58,7 +58,7 @@ export function MilestoneSubmitForm({
   const tx = useContractTransaction();
 
   // Guard: Check if wallet is recipient and milestone is pending (not submitted/approved/paid)
-  const isRecipient = !!address && !!grant && address === grant.owner;
+  const isRecipient = !!address && !!grant && address === grant.grant.owner;
   const isPending = !!milestone && !milestone.submitted && !milestone.approved && !milestone.paid;
 
   if (grantLoading || milestoneLoading) {

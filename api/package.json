@@ -7,6 +7,9 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "test:e2e": "vitest run tests/e2e",
+    "test:integration": "vitest run tests/integration",
+    "test:coverage": "vitest run --coverage tests",
+    "migration:run": "tsx src/scripts/run-migrations.ts",
     "typeorm:sync": "tsx src/scripts/sync-db.ts"
   },
   "dependencies": {
