@@ -1,4 +1,4 @@
-import { Counter, Histogram, Registry, collectDefaultMetrics } from "prom-client";
+import { Counter, Gauge, Histogram, Registry, collectDefaultMetrics } from "prom-client";
 
 class MetricsService {
   private readonly registry = new Registry();
@@ -44,6 +44,18 @@ class MetricsService {
     registers: [this.registry],
   });
 
+  private readonly sseConnectionsTotal = new Counter({
+    name: "stellargrant_sse_connections_total",
+    help: "Total number of SSE connections established",
+    registers: [this.registry],
+  });
+
+  private readonly sseActiveConnections = new Gauge({
+    name: "stellargrant_sse_active_connections",
+    help: "Current number of open SSE connections",
+    registers: [this.registry],
+  });
+
   constructor() {
     collectDefaultMetrics({
       prefix: "stellargrant_",
@@ -70,6 +82,15 @@ class MetricsService {
     if (gapsFound > 0) {
       this.onchainReconciliationGapsTotal.inc(gapsFound);
     }
+  }
+
+  incrementSseConnections(): void {
+    this.sseConnectionsTotal.inc();
+    this.sseActiveConnections.inc();
+  }
+
+  decrementSseConnections(): void {
+    this.sseActiveConnections.dec();
   }
 
   async getMetricsText(): Promise<string> {

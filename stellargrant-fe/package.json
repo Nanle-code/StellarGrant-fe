@@ -13,7 +13,8 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
     "mock": "tsx mock-server/index.ts",
-    "dev:mock": "concurrently \"npm run mock\" \"npm run dev\""
+    "dev:mock": "concurrently \"npm run mock\" \"npm run dev\"",
+    "analyze": "cross-env ANALYZE=true next build --webpack"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -39,8 +40,10 @@
     "lightningcss-linux-x64-gnu": "^1.31.1"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^15.0.0",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
+    "cross-env": "^7.0.3",
     "@tanstack/react-query-devtools": "^5.100.14",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
